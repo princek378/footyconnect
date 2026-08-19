@@ -78,11 +78,19 @@ export default function AdminPage() {
 
     const pChannel = supabase
       .channel("admin-players")
-      .on("postgres_changes", { event: "*", schema: "public", table: "players" }, fetchPlayers)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "players" },
+        fetchPlayers
+      )
       .subscribe();
     const mChannel = supabase
       .channel("admin-matches")
-      .on("postgres_changes", { event: "*", schema: "public", table: "matches" }, fetchMatches)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "matches" },
+        fetchMatches
+      )
       .subscribe();
 
     return () => {
@@ -110,6 +118,23 @@ export default function AdminPage() {
       .from("players")
       .update({ isAdmin: !p.isAdmin, updatedAt: Date.now() })
       .eq("uid", p.uid);
+  };
+
+  const deletePlayer = async (p: PlayerProfile) => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user && p.uid === user.id) {
+      alert("You cannot delete your own account.");
+      return;
+    }
+    if (
+      confirm(
+        `Are you sure you want to delete ${p.displayName}? This cannot be undone.`
+      )
+    ) {
+      await supabase.from("players").delete().eq("uid", p.uid);
+    }
   };
 
   const createMatch = async () => {
@@ -195,7 +220,10 @@ export default function AdminPage() {
                             <input
                               value={editForm.displayName || ""}
                               onChange={(e) =>
-                                setEditForm({ ...editForm, displayName: e.target.value })
+                                setEditForm({
+                                  ...editForm,
+                                  displayName: e.target.value,
+                                })
                               }
                               className="input-field !py-1.5 !px-2 text-sm"
                             />
@@ -204,12 +232,17 @@ export default function AdminPage() {
                             <select
                               value={editForm.position}
                               onChange={(e) =>
-                                setEditForm({ ...editForm, position: e.target.value as Position })
+                                setEditForm({
+                                  ...editForm,
+                                  position: e.target.value as Position,
+                                })
                               }
                               className="input-field !py-1.5 !px-2 text-sm"
                             >
                               {positions.map((pos) => (
-                                <option key={pos} value={pos}>{pos}</option>
+                                <option key={pos} value={pos}>
+                                  {pos}
+                                </option>
                               ))}
                             </select>
                           </td>
@@ -217,12 +250,17 @@ export default function AdminPage() {
                             <select
                               value={editForm.strongFoot}
                               onChange={(e) =>
-                                setEditForm({ ...editForm, strongFoot: e.target.value as StrongFoot })
+                                setEditForm({
+                                  ...editForm,
+                                  strongFoot: e.target.value as StrongFoot,
+                                })
                               }
                               className="input-field !py-1.5 !px-2 text-sm"
                             >
                               {feet.map((f) => (
-                                <option key={f} value={f}>{f}</option>
+                                <option key={f} value={f}>
+                                  {f}
+                                </option>
                               ))}
                             </select>
                           </td>
@@ -231,7 +269,10 @@ export default function AdminPage() {
                               type="number"
                               value={editForm.height || ""}
                               onChange={(e) =>
-                                setEditForm({ ...editForm, height: Number(e.target.value) })
+                                setEditForm({
+                                  ...editForm,
+                                  height: Number(e.target.value),
+                                })
                               }
                               className="input-field !py-1.5 !px-2 text-sm w-20"
                             />
@@ -241,7 +282,10 @@ export default function AdminPage() {
                               type="number"
                               value={editForm.weight || ""}
                               onChange={(e) =>
-                                setEditForm({ ...editForm, weight: Number(e.target.value) })
+                                setEditForm({
+                                  ...editForm,
+                                  weight: Number(e.target.value),
+                                })
                               }
                               className="input-field !py-1.5 !px-2 text-sm w-20"
                             />
@@ -250,33 +294,51 @@ export default function AdminPage() {
                             <select
                               value={editForm.playingStyle}
                               onChange={(e) =>
-                                setEditForm({ ...editForm, playingStyle: e.target.value as PlayingStyle })
+                                setEditForm({
+                                  ...editForm,
+                                  playingStyle: e.target.value as PlayingStyle,
+                                })
                               }
                               className="input-field !py-1.5 !px-2 text-sm"
                             >
                               {styles.map((s) => (
-                                <option key={s} value={s}>{s}</option>
+                                <option key={s} value={s}>
+                                  {s}
+                                </option>
                               ))}
                             </select>
                           </td>
                           <td className="py-2 px-3">—</td>
                           <td className="py-2 px-4 text-right space-x-1">
-                            <button onClick={saveEdit} className="p-1.5 rounded-lg bg-pitch-600/30 text-pitch-400 hover:bg-pitch-600/50">
+                            <button
+                              onClick={saveEdit}
+                              className="p-1.5 rounded-lg bg-pitch-600/30 text-pitch-400 hover:bg-pitch-600/50"
+                            >
                               <Save className="w-4 h-4" />
                             </button>
-                            <button onClick={() => setEditingId(null)} className="p-1.5 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600">
+                            <button
+                              onClick={() => setEditingId(null)}
+                              className="p-1.5 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600"
+                            >
                               <X className="w-4 h-4" />
                             </button>
                           </td>
                         </tr>
                       ) : (
-                        <tr key={p.uid} className="border-b border-white/5 hover:bg-white/[0.02]">
-                          <td className="py-3 px-4 font-medium">{p.displayName}</td>
+                        <tr
+                          key={p.uid}
+                          className="border-b border-white/5 hover:bg-white/[0.02]"
+                        >
+                          <td className="py-3 px-4 font-medium">
+                            {p.displayName}
+                          </td>
                           <td className="py-3 px-3">{p.position}</td>
                           <td className="py-3 px-3">{p.strongFoot}</td>
                           <td className="py-3 px-3">{p.height} cm</td>
                           <td className="py-3 px-3">{p.weight} kg</td>
-                          <td className="py-3 px-3 text-slate-400">{p.playingStyle}</td>
+                          <td className="py-3 px-3 text-slate-400">
+                            {p.playingStyle}
+                          </td>
                           <td className="py-3 px-3">
                             <button
                               onClick={() => toggleAdmin(p)}
@@ -289,12 +351,20 @@ export default function AdminPage() {
                               {p.isAdmin ? "Admin" : "Make Admin"}
                             </button>
                           </td>
-                          <td className="py-3 px-4 text-right">
+                          <td className="py-3 px-4 text-right space-x-1">
                             <button
                               onClick={() => startEdit(p)}
                               className="p-1.5 rounded-lg text-slate-400 hover:text-pitch-400 hover:bg-pitch-500/10"
+                              title="Edit player"
                             >
                               <Edit3 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => deletePlayer(p)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+                              title="Delete player"
+                            >
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </td>
                         </tr>
@@ -326,31 +396,49 @@ export default function AdminPage() {
                 <h3 className="font-semibold">New Match</h3>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
-                    <label className="text-xs text-slate-400 mb-1 block">Date</label>
+                    <label className="text-xs text-slate-400 mb-1 block">
+                      Date
+                    </label>
                     <input
                       type="date"
                       value={matchForm.date}
-                      onChange={(e) => setMatchForm({ ...matchForm, date: e.target.value })}
+                      onChange={(e) =>
+                        setMatchForm({ ...matchForm, date: e.target.value })
+                      }
                       className="input-field !py-2"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-slate-400 mb-1 block">Opponent</label>
+                    <label className="text-xs text-slate-400 mb-1 block">
+                      Opponent
+                    </label>
                     <input
                       type="text"
                       value={matchForm.opponent}
-                      onChange={(e) => setMatchForm({ ...matchForm, opponent: e.target.value })}
+                      onChange={(e) =>
+                        setMatchForm({
+                          ...matchForm,
+                          opponent: e.target.value,
+                        })
+                      }
                       className="input-field !py-2"
                       placeholder="Rival FC"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-slate-400 mb-1 block">Score (Home - Away)</label>
+                    <label className="text-xs text-slate-400 mb-1 block">
+                      Score (Home - Away)
+                    </label>
                     <div className="flex gap-2">
                       <input
                         type="number"
                         value={matchForm.homeScore}
-                        onChange={(e) => setMatchForm({ ...matchForm, homeScore: Number(e.target.value) })}
+                        onChange={(e) =>
+                          setMatchForm({
+                            ...matchForm,
+                            homeScore: Number(e.target.value),
+                          })
+                        }
                         className="input-field !py-2 w-20"
                         min={0}
                       />
@@ -358,19 +446,33 @@ export default function AdminPage() {
                       <input
                         type="number"
                         value={matchForm.awayScore}
-                        onChange={(e) => setMatchForm({ ...matchForm, awayScore: Number(e.target.value) })}
+                        onChange={(e) =>
+                          setMatchForm({
+                            ...matchForm,
+                            awayScore: Number(e.target.value),
+                          })
+                        }
                         className="input-field !py-2 w-20"
                         min={0}
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs text-slate-400 mb-1 block">Home game?</label>
+                    <label className="text-xs text-slate-400 mb-1 block">
+                      Home game?
+                    </label>
                     <button
                       type="button"
-                      onClick={() => setMatchForm({ ...matchForm, isHome: !matchForm.isHome })}
+                      onClick={() =>
+                        setMatchForm({
+                          ...matchForm,
+                          isHome: !matchForm.isHome,
+                        })
+                      }
                       className={`w-full py-2 rounded-xl text-sm font-medium ${
-                        matchForm.isHome ? "bg-pitch-600 text-white" : "bg-slate-700 text-slate-300"
+                        matchForm.isHome
+                          ? "bg-pitch-600 text-white"
+                          : "bg-slate-700 text-slate-300"
                       }`}
                     >
                       {matchForm.isHome ? "Home" : "Away"}
@@ -379,11 +481,18 @@ export default function AdminPage() {
                 </div>
 
                 <div>
-                  <p className="text-sm text-slate-400 mb-2">Player ratings, goals & assists</p>
+                  <p className="text-sm text-slate-400 mb-2">
+                    Player ratings, goals & assists
+                  </p>
                   <div className="max-h-64 overflow-y-auto space-y-2">
                     {players.map((p) => (
-                      <div key={p.uid} className="flex items-center gap-3 text-sm">
-                        <span className="w-32 truncate font-medium">{p.displayName}</span>
+                      <div
+                        key={p.uid}
+                        className="flex items-center gap-3 text-sm"
+                      >
+                        <span className="w-32 truncate font-medium">
+                          {p.displayName}
+                        </span>
                         <input
                           type="number"
                           step="0.1"
@@ -446,22 +555,35 @@ export default function AdminPage() {
                 </div>
 
                 <div className="flex gap-3">
-                  <button onClick={createMatch} className="btn-primary">Create Match</button>
-                  <button onClick={() => setShowMatchForm(false)} className="btn-secondary">Cancel</button>
+                  <button onClick={createMatch} className="btn-primary">
+                    Create Match
+                  </button>
+                  <button
+                    onClick={() => setShowMatchForm(false)}
+                    className="btn-secondary"
+                  >
+                    Cancel
+                  </button>
                 </div>
               </div>
             )}
 
             <div className="space-y-3">
               {matches.map((m) => (
-                <div key={m.id} className="glass rounded-xl p-4 flex items-center justify-between">
+                <div
+                  key={m.id}
+                  className="glass rounded-xl p-4 flex items-center justify-between"
+                >
                   <div>
                     <p className="font-medium">
                       vs {m.opponent}{" "}
-                      <span className="text-slate-500">({m.isHome ? "H" : "A"})</span>
+                      <span className="text-slate-500">
+                        ({m.isHome ? "H" : "A"})
+                      </span>
                     </p>
                     <p className="text-sm text-slate-400">
-                      {format(new Date(m.date), "d MMM yyyy")} · {m.homeScore}-{m.awayScore}
+                      {format(new Date(m.date), "d MMM yyyy")} ·{" "}
+                      {m.homeScore}-{m.awayScore}
                     </p>
                   </div>
                   <button
@@ -473,7 +595,9 @@ export default function AdminPage() {
                 </div>
               ))}
               {matches.length === 0 && (
-                <p className="text-slate-500 text-center py-8">No matches yet. Add one above.</p>
+                <p className="text-slate-500 text-center py-8">
+                  No matches yet. Add one above.
+                </p>
               )}
             </div>
           </section>
