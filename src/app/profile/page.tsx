@@ -10,6 +10,7 @@ import {
   StrongFoot,
   Position,
   PlayingStyle,
+  Team,
 } from "@/types";
 import {
   Save,
@@ -19,6 +20,7 @@ import {
   Footprints,
   Target,
   Sparkles,
+  Users,
 } from "lucide-react";
 
 const positions: Position[] = ["GK", "DEF", "MID", "FWD"];
@@ -39,6 +41,7 @@ const styles: PlayingStyle[] = [
 export default function ProfilePage() {
   const { profile, refreshProfile } = useAuth();
   const [form, setForm] = useState<Partial<PlayerProfile>>({});
+  const [teams, setTeams] = useState<Team[]>([]);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -51,9 +54,18 @@ export default function ProfilePage() {
         strongFoot: profile.strongFoot,
         position: profile.position,
         playingStyle: profile.playingStyle,
+        teamId: profile.teamId || null,
       });
     }
   }, [profile]);
+
+  useEffect(() => {
+    const fetchTeams = async () => {
+      const { data } = await supabase.from("teams").select("*").order("name");
+      if (data) setTeams(data as Team[]);
+    };
+    fetchTeams();
+  }, []);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,6 +111,7 @@ export default function ProfilePage() {
             onSubmit={handleSave}
             className="glass-strong rounded-2xl p-6 sm:p-8 space-y-6"
           >
+            {/* Display Name */}
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-1.5">
                 <User className="w-4 h-4" /> Display Name
@@ -114,6 +127,31 @@ export default function ProfilePage() {
               />
             </div>
 
+            {/* Team Selection */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-1.5">
+                <Users className="w-4 h-4" /> Team
+              </label>
+              <select
+                value={form.teamId || ""}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    teamId: e.target.value || null,
+                  })
+                }
+                className="input-field"
+              >
+                <option value="">No Team</option>
+                {teams.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Height & Weight */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-1.5">
@@ -149,6 +187,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            {/* Strong Foot */}
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-2">
                 <Footprints className="w-4 h-4" /> Strong Foot
@@ -171,6 +210,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            {/* Position */}
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-2">
                 <Target className="w-4 h-4" /> Position
@@ -193,6 +233,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            {/* Playing Style */}
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-2">
                 <Sparkles className="w-4 h-4" /> Playing Style
