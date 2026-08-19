@@ -121,7 +121,7 @@ export default function PlayersPage() {
                           <h3 className="font-semibold leading-tight flex items-center gap-1.5">
                             {p.displayName}
                             {p.isCaptain && (
-                              <Crown className="w-4 h-4 text-amber-400" title="Captain" />
+                              <Crown className="w-4 h-4 text-amber-400"/>
                             )}
                             {isMe && (
                               <span className="ml-1 text-xs text-pitch-400">(You)</span>
