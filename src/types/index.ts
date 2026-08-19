@@ -23,8 +23,20 @@ export interface PlayerProfile {
   position: Position;
   playingStyle: PlayingStyle;
   isAdmin: boolean;
+  teamId?: string | null;
+  isCaptain?: boolean;
+  isFreeKickTaker?: boolean;
+  isRightCornerTaker?: boolean;
+  isLeftCornerTaker?: boolean;
   createdAt: number;
   updatedAt: number;
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  createdAt: number;
+  createdBy?: string;
 }
 
 export interface MatchPlayerStat {
