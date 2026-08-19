@@ -17,8 +17,8 @@ export interface PlayerProfile {
   email: string;
   displayName: string;
   photoURL?: string;
-  height: number; // cm
-  weight: number; // kg
+  height: number;
+  weight: number;
   strongFoot: StrongFoot;
   position: Position;
   playingStyle: PlayingStyle;
@@ -30,14 +30,14 @@ export interface PlayerProfile {
 export interface MatchPlayerStat {
   playerId: string;
   playerName: string;
-  rating: number; // 1-10
+  rating: number;
   goals: number;
   assists: number;
 }
 
 export interface Match {
   id: string;
-  date: string; // ISO date
+  date: string;
   opponent: string;
   homeScore: number;
   awayScore: number;
@@ -52,8 +52,21 @@ export interface ChatMessage {
   senderName: string;
   senderPhoto?: string;
   type: "text" | "voice" | "system";
-  content: string; // text or storage URL for voice
-  duration?: number; // for voice notes in seconds
+  content: string;
+  duration?: number;
+  createdAt: number;
+  isAdmin?: boolean;
+}
+
+export interface PrivateMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  receiverId: string;
+  receiverName: string;
+  type: "text" | "voice";
+  content: string;
+  duration?: number;
   createdAt: number;
   isAdmin?: boolean;
 }
