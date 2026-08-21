@@ -25,7 +25,6 @@ import {
   Calendar,
   Crown,
   Image as ImageIcon,
-  Video,
   UserPlus,
 } from "lucide-react";
 import { format } from "date-fns";
@@ -49,7 +48,6 @@ export default function AdminPage() {
   const [showMatchForm, setShowMatchForm] = useState(false);
   const [showCreatePlayer, setShowCreatePlayer] = useState(false);
 
-  // Create Player form
   const [newPlayer, setNewPlayer] = useState({
     displayName: "",
     email: "",
@@ -58,7 +56,6 @@ export default function AdminPage() {
     strongFoot: "Right" as StrongFoot,
   });
 
-  // Match form
   const [matchForm, setMatchForm] = useState({
     date: new Date().toISOString().slice(0, 10),
     team1Id: "",
@@ -66,11 +63,11 @@ export default function AdminPage() {
     team1Score: 0,
     team2Score: 0,
   });
+
   const [matchStats, setMatchStats] = useState<
     Record<string, { rating: number; goals: number; assists: number }>
   >({});
 
-  // Media
   const [uploading, setUploading] = useState(false);
   const [mediaTitle, setMediaTitle] = useState("");
 
@@ -87,6 +84,7 @@ export default function AdminPage() {
       if (m.data) setMatches(m.data as Match[]);
       if (med.data) setMedia(med.data as MediaItem[]);
     };
+
     fetchAll();
 
     const channel = supabase
@@ -97,7 +95,9 @@ export default function AdminPage() {
       .on("postgres_changes", { event: "*", schema: "public", table: "media" }, fetchAll)
       .subscribe();
 
-    return () => supabase.removeChannel(channel);
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   // ========== CREATE PLAYER ACCOUNT ==========
@@ -112,7 +112,6 @@ export default function AdminPage() {
     }
 
     try {
-      // Create auth user
       const { data, error } = await supabase.auth.signUp({
         email: newPlayer.email,
         password: newPlayer.password,
@@ -122,7 +121,6 @@ export default function AdminPage() {
       if (error) throw error;
       if (!data.user) throw new Error("Failed to create user");
 
-      // Create player profile
       await supabase.from("players").insert([{
         uid: data.user.id,
         email: newPlayer.email,
@@ -231,7 +229,13 @@ export default function AdminPage() {
     }]);
 
     setShowMatchForm(false);
-    setMatchForm({ date: new Date().toISOString().slice(0, 10), team1Id: "", team2Id: "", team1Score: 0, team2Score: 0 });
+    setMatchForm({
+      date: new Date().toISOString().slice(0, 10),
+      team1Id: "",
+      team2Id: "",
+      team1Score: 0,
+      team2Score: 0,
+    });
     setMatchStats({});
   };
 
@@ -260,7 +264,7 @@ export default function AdminPage() {
       const path = `media/${id}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
-        .from("voice-notes") // reusing existing bucket
+        .from("voice-notes")
         .upload(path, file);
 
       if (uploadError) throw uploadError;
@@ -306,7 +310,7 @@ export default function AdminPage() {
             <p className="text-slate-400 mt-1">Manage everything</p>
           </div>
 
-          {/* ========== CREATE PLAYER ACCOUNT ========== */}
+          {/* CREATE PLAYER ACCOUNT */}
           <section>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold flex items-center gap-2">
@@ -356,7 +360,7 @@ export default function AdminPage() {
             )}
           </section>
 
-          {/* ========== TEAMS ========== */}
+          {/* TEAMS */}
           <section>
             <h2 className="text-xl font-semibold flex items-center gap-2 mb-4">
               <Users className="w-5 h-5 text-pitch-400" /> Teams
@@ -387,7 +391,7 @@ export default function AdminPage() {
             </div>
           </section>
 
-          {/* ========== PLAYERS ========== */}
+          {/* PLAYERS */}
           <section>
             <h2 className="text-xl font-semibold mb-4">Players ({players.length})</h2>
             <div className="glass rounded-2xl overflow-x-auto">
@@ -462,7 +466,7 @@ export default function AdminPage() {
             </div>
           </section>
 
-          {/* ========== MATCHES ========== */}
+          {/* MATCHES */}
           <section>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold flex items-center gap-2">
@@ -504,7 +508,6 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* Players from both teams */}
                 {(matchForm.team1Id || matchForm.team2Id) && (
                   <div>
                     <p className="text-sm text-slate-400 mb-2">Player ratings, goals & assists</p>
@@ -535,14 +538,16 @@ export default function AdminPage() {
 
             <div className="space-y-3">
               {matches.map(m => {
-                const winner = (m.team1Score ?? 0) > (m.team2Score ?? 0) ? m.team1Name : (m.team2Score ?? 0) > (m.team1Score ?? 0) ? m.team2Name : "Draw";
+                const s1 = m.team1Score ?? 0;
+                const s2 = m.team2Score ?? 0;
+                const winner = s1 > s2 ? m.team1Name : s2 > s1 ? m.team2Name : "Draw";
                 return (
                   <div key={m.id} className="glass rounded-xl p-4 flex items-center justify-between">
                     <div>
                       <p className="font-medium">
-                        {m.team1Name || "Team 1"} <span className="text-pitch-400">{m.team1Score}</span>
+                        {m.team1Name || "Team 1"} <span className="text-pitch-400">{s1}</span>
                         {" - "}
-                        <span className="text-pitch-400">{m.team2Score}</span> {m.team2Name || "Team 2"}
+                        <span className="text-pitch-400">{s2}</span> {m.team2Name || "Team 2"}
                       </p>
                       <p className="text-sm text-slate-400">
                         {format(new Date(m.date), "d MMM yyyy")} · Winner: <span className="text-amber-400">{winner}</span>
@@ -557,7 +562,7 @@ export default function AdminPage() {
             </div>
           </section>
 
-          {/* ========== MEDIA ========== */}
+          {/* MEDIA */}
           <section>
             <h2 className="text-xl font-semibold flex items-center gap-2 mb-4">
               <ImageIcon className="w-5 h-5 text-pitch-400" /> Media Gallery
