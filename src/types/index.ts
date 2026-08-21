@@ -50,11 +50,28 @@ export interface MatchPlayerStat {
 export interface Match {
   id: string;
   date: string;
-  opponent: string;
-  homeScore: number;
-  awayScore: number;
-  isHome: boolean;
+  opponent?: string;
+  homeScore?: number;
+  awayScore?: number;
+  isHome?: boolean;
+  team1Id?: string;
+  team1Name?: string;
+  team2Id?: string;
+  team2Name?: string;
+  team1Score?: number;
+  team2Score?: number;
+  team1PlayerIds?: string[];
+  team2PlayerIds?: string[];
   playerStats: MatchPlayerStat[];
+  createdAt: number;
+}
+
+export interface MediaItem {
+  id: string;
+  title?: string;
+  type: "image" | "video";
+  url: string;
+  uploadedBy?: string;
   createdAt: number;
 }
 
